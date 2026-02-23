@@ -1,0 +1,44 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "searchServices_aisearch_59358560_name": {
+            "defaultValue": "aisearch-59358560",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Search/searchServices",
+            "apiVersion": "2025-05-01",
+            "name": "[parameters('searchServices_aisearch_59358560_name')]",
+            "location": "East US 2",
+            "sku": {
+                "name": "basic"
+            },
+            "properties": {
+                "replicaCount": 1,
+                "partitionCount": 1,
+                "endpoint": "[concat('https://', parameters('searchServices_aisearch_59358560_name'), '.search.windows.net')]",
+                "hostingMode": "Default",
+                "computeType": "Default",
+                "publicNetworkAccess": "Enabled",
+                "networkRuleSet": {
+                    "ipRules": [],
+                    "bypass": "None"
+                },
+                "encryptionWithCmk": {
+                    "enforcement": "Unspecified"
+                },
+                "disableLocalAuth": false,
+                "authOptions": {
+                    "apiKeyOnly": {}
+                },
+                "dataExfiltrationProtections": [],
+                "semanticSearch": "free",
+                "upgradeAvailable": "notAvailable"
+            }
+        }
+    ]
+}

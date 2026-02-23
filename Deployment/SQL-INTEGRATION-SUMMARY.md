@@ -1,0 +1,483 @@
+# SQL Server and Database Integration - Summary of Changes
+
+## ✅ Task Completed
+
+Successfully modified the `Deploy-AzureAIFoundry.ps1` script to create SQL Server and Database resources as described in `SQLDB.json` and update the `.env` file with server endpoint and credentials.
+
+---
+
+## 📝 Changes Made
+
+### 1. **Script Updates** (`Deploy-AzureAIFoundry.ps1`)
+
+#### a. Updated Script Description
+```powershell
+# Added to description:
+- SQL Server and Database with vector capabilities
+```
+
+#### b. New Function: `New-SecurePassword`
+**Location:** After `New-CosmosDBResource` function
+
+**Purpose:** Generate secure passwords meeting Azure SQL requirements
+
+**Features:**
+- 16+ character length
+- Includes uppercase, lowercase, numbers, and special characters
+- Randomized and shuffled for security
+- Meets Azure SQL complexity requirements
+
+#### c. New Function: `New-SQLServerAndDatabase`
+**Location:** After `New-SecurePassword` function
+
+**Features:**
+- Creates SQL Server with secure authentication
+- Generates and uses secure admin password
+- Configures public network access for lab scenarios
+- Sets up firewall rules:
+  - `AllowAzureServices` (for Azure service integration)
+  - `AllowAllIPs` (for lab access - should be restricted in production)
+- Creates `vectordb` database
+- Uses GP_Gen5 SKU (2 vCores, 32GB max size)
+- Configures geo-redundant backup
+- Idempotent (checks if resources exist before creating)
+- Returns server information including credentials
+
+**Parameters:**
+- `$ServerName` (required)
+- `$DatabaseName` (default: "vectordb")
+- `$AdminUser` (default: "sqladmin")
+
+#### d. Updated `Get-ResourceInformation` Function
+**Added:** SQL Server information collection
+- Stores server fully qualified domain name
+- Stores admin username
+- Stores admin password
+- Stores database name
+
+**New Parameter:** `$SqlServerInfo` (hashtable)
+
+#### e. Updated `Update-EnvFile` Function
+**Added:** Two new environment variables
+- `SQL_SERVER` (fully qualified server name)
+- `SQL_PWD` (admin password)
+
+#### f. Updated `Show-DeploymentSummary` Function
+**Added:** SQL Server section in summary report
+- Displays SQL Server FQDN
+- Displays database name
+- Displays admin username
+
+#### g. Updated `Main` Function
+**Added:**
+- SQL Server name variable: `$sqlServerName = "sqlaivector-$script:LabInstanceId"`
+- SQL Server creation call: `$sqlServer = New-SQLServerAndDatabase -ServerName $sqlServerName`
+- SQL Server info parameter in resource information collection
+
+---
+
+### 2. **Documentation Updates**
+
+#### a. `DEPLOYMENT-README.md`
+**Updated:**
+- Added SQL Server and Database to feature list (step 6)
+- Updated step numbering (Configuration info is now step 7, .env update is step 8)
+- Added SQL Server and Database to resources created table
+- Added SQL_SERVER and SQL_PWD to .env file example
+- Updated execution time to include SQL Server (3-5 minutes)
+- Updated total deployment time to 20-30 minutes
+
+#### b. `SQL-VALIDATION.md` (New File)
+**Created comprehensive validation document including:**
+- Configuration comparison between SQLDB.json and script
+- Features validation checklist
+- Deployment details
+- Cost information (with optimization tips)
+- Security features and best practices
+- Verification steps (Portal, CLI, PowerShell, Connection tests)
+- Testing examples (Python, SQL queries)
+- Firewall configuration notes
+- Password management guidelines
+- Vector capabilities discussion
+
+---
+
+## 🎯 Specification Compliance
+
+### SQLDB.json Specifications Implemented
+
+| Specification | Value | Status |
+|--------------|-------|--------|
+| Resource Type | Microsoft.Sql/servers/databases | ✅ |
+| Server Naming | sqlaivector-{id} | ✅ |
+| Database Name | vectordb | ✅ |
+| Location | eastus2 | ✅ |
+| SKU Name | GP_Gen5 | ✅ |
+| Tier | GeneralPurpose | ✅ |
+| Family | Gen5 | ✅ |
+| Capacity | 2 vCores | ✅ |
+| Max Size | 32GB (34359738368 bytes) | ✅ |
+| Collation | SQL_Latin1_General_CP1_CI_AS | ✅ |
+| Zone Redundant | false | ✅ |
+| Read Scale | Disabled | ✅ |
+| Backup Redundancy | Geo | ✅ |
+| License Type | LicenseIncluded | ✅ |
+
+---
+
+## 📦 Resources Created
+
+### By the Script
+
+1. **SQL Server**
+   - Name: `sqlaivector-{LabInstanceId}`
+   - Example: `sqlaivector-53439517.database.windows.net`
+   - Admin User: `sqladmin`
+   - Admin Password: Auto-generated (16+ chars)
+   - Location: East US 2
+   - Public Access: Enabled
+
+2. **Firewall Rules**
+   - `AllowAzureServices`: Allows Azure services
+   - `AllowAllIPs`: Allows all IPs (lab only - restrict for production)
+
+3. **Database (vectordb)**
+   - SKU: GP_Gen5 (General Purpose Gen5)
+   - vCores: 2
+   - Max Size: 32 GB
+   - Collation: SQL_Latin1_General_CP1_CI_AS
+   - Backup: Geo-redundant
+   - TDE: Enabled (default)
+
+---
+
+## 🔄 .env File Updates
+
+### New Variables Added
+
+```bash
+SQL_SERVER=sqlaivector-53439517.database.windows.net
+SQL_PWD=<auto-generated-secure-password>
+```
+
+### Existing Variables (Already in .env)
+
+```bash
+SQL_DATABASE=vectordb
+SQL_USER=sqladmin
+```
+
+---
+
+## 🚀 How to Use
+
+### Run the Script
+
+```powershell
+.\Deploy-AzureAIFoundry.ps1 -LabInstanceId "53439517"
+```
+
+### What Happens
+
+1. Script checks for existing SQL Server
+2. Generates secure admin password
+3. Creates SQL Server if not exists (3-5 minutes)
+4. Configures firewall rules
+5. Creates vectordb database (2-3 minutes)
+6. Retrieves server FQDN and credentials
+7. Updates .env file automatically
+
+### Verify Deployment
+
+**Via Azure Portal:**
+```
+https://portal.azure.com
+→ Resource Group → sqlaivector-53439517
+```
+
+**Via Azure CLI:**
+```powershell
+az sql server show `
+  --name sqlaivector-53439517 `
+  --resource-group azureaiworkshoprg
+```
+
+**Test Connection:**
+Use SQL Server Management Studio (SSMS):
+- Server: `sqlaivector-53439517.database.windows.net`
+- Auth: SQL Server Authentication
+- Login: `sqladmin`
+- Password: (from .env file)
+
+---
+
+## ⏱️ Execution Time
+
+| Step | Time |
+|------|------|
+| Create SQL Server | 3-5 minutes |
+| Configure Firewall | < 1 minute |
+| Create Database | 2-3 minutes |
+| Collect Credentials | < 1 minute |
+| **Total** | **5-8 minutes** |
+
+---
+
+## 💰 Cost Estimate
+
+**SQL Database (GP_Gen5, 2 vCores):**
+- ~$729/month (pay-as-you-go)
+- ~$365/month (1-year reserved)
+- ~$243/month (3-year reserved)
+
+**Cost Optimization for Labs:**
+- **Basic Tier:** ~$5/month
+- **S0 Standard:** ~$15/month
+- **Serverless:** Auto-pause when idle
+
+**Recommendation for Lab:** Consider using Basic or S0 Standard tiers to reduce costs.
+
+---
+
+## 🔒 Security Features
+
+### Authentication
+✅ SQL Server authentication with complex password  
+✅ Azure AD authentication supported  
+✅ TLS 1.2+ enforced  
+
+### Data Protection
+✅ Transparent Data Encryption (TDE) enabled  
+✅ Geo-redundant backups  
+✅ 7-day point-in-time restore  
+
+### Network Security
+✅ Firewall rules configured  
+⚠️ All IPs allowed (lab only - restrict for production)  
+✅ TLS encryption for connections  
+
+### Best Practice Warning
+```powershell
+# For production, remove open firewall rule:
+az sql server firewall-rule delete `
+  --name AllowAllIPs `
+  --server sqlaivector-{id} `
+  --resource-group azureaiworkshoprg
+
+# Add specific IP only:
+az sql server firewall-rule create `
+  --name AllowMyIP `
+  --server sqlaivector-{id} `
+  --resource-group azureaiworkshoprg `
+  --start-ip-address <your-ip> `
+  --end-ip-address <your-ip>
+```
+
+---
+
+## ✅ Testing
+
+### Test Connection with Python
+
+```python
+import pyodbc
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+server = os.getenv("SQL_SERVER")
+database = os.getenv("SQL_DATABASE", "vectordb")
+username = os.getenv("SQL_USER", "sqladmin")
+password = os.getenv("SQL_PWD")
+
+# Connection string
+driver = "{ODBC Driver 18 for SQL Server}"
+conn_str = f"DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password};Encrypt=yes;"
+
+try:
+    conn = pyodbc.connect(conn_str)
+    print("✅ Connected to SQL Server successfully!")
+    
+    cursor = conn.cursor()
+    cursor.execute("SELECT @@VERSION")
+    version = cursor.fetchone()[0]
+    print(f"Version: {version}")
+    
+    conn.close()
+except Exception as e:
+    print(f"❌ Connection failed: {e}")
+```
+
+### Test Query
+
+```sql
+-- Verify database
+SELECT 
+    name AS DatabaseName,
+    database_id,
+    compatibility_level,
+    state_desc AS State
+FROM sys.databases
+WHERE name = 'vectordb';
+
+-- Check space usage
+EXEC sp_spaceused;
+
+-- Test simple query
+SELECT 
+    GETDATE() AS CurrentDateTime,
+    @@VERSION AS SQLServerVersion;
+```
+
+---
+
+## 📊 Validation Summary
+
+| Component | Status |
+|-----------|--------|
+| Script Modification | ✅ Complete |
+| SQL Server Creation | ✅ Implemented |
+| Database Creation | ✅ Implemented |
+| Password Generation | ✅ Implemented |
+| Firewall Configuration | ✅ Implemented |
+| FQDN Collection | ✅ Implemented |
+| Credentials Collection | ✅ Implemented |
+| .env Update | ✅ Implemented |
+| Documentation | ✅ Complete |
+| Validation Guide | ✅ Complete |
+
+---
+
+## 📚 Documentation Files
+
+### Created/Updated
+
+1. ✅ `Deploy-AzureAIFoundry.ps1` - Updated with SQL Server support
+2. ✅ `DEPLOYMENT-README.md` - Updated with SQL information
+3. ✅ `SQL-VALIDATION.md` - New validation guide
+4. ✅ `SQL-INTEGRATION-SUMMARY.md` - This file
+
+---
+
+## 🎓 Next Steps
+
+### After Running the Script
+
+1. **Verify in Azure Portal**
+   - Check SQL Server is created
+   - Verify vectordb database exists
+   - Confirm firewall rules are set
+
+2. **Test Connection**
+   - Use SQL Server Management Studio (SSMS)
+   - Or use Azure Data Studio
+   - Run test queries to verify connectivity
+
+3. **Run Lab Exercises**
+   - Navigate to Lab 10 - Vector-DB/SQL
+   - Follow the SQL vector database exercises
+   - Test vector storage and querying
+
+4. **Secure for Production** (if needed)
+   - Remove `AllowAllIPs` firewall rule
+   - Add specific IP ranges only
+   - Consider Azure AD authentication
+   - Enable Advanced Threat Protection
+
+---
+
+## 🔗 Related Files
+
+- **Script:** [Deploy-AzureAIFoundry.ps1](Deploy-AzureAIFoundry.ps1)
+- **Template:** [SQLDB.json](SQLDB.json)
+- **Main Docs:** [DEPLOYMENT-README.md](DEPLOYMENT-README.md)
+- **Validation:** [SQL-VALIDATION.md](SQL-VALIDATION.md)
+- **Cosmos Validation:** [COSMOS-VALIDATION.md](COSMOS-VALIDATION.md)
+- **AI Search Validation:** [VALIDATION-SUMMARY.md](VALIDATION-SUMMARY.md)
+
+---
+
+## ⚙️ Technical Details
+
+### Azure CLI Commands Used
+
+```powershell
+# Create SQL Server
+az sql server create `
+  --name sqlaivector-{id} `
+  --resource-group azureaiworkshoprg `
+  --location eastus2 `
+  --admin-user sqladmin `
+  --admin-password <generated-password> `
+  --enable-public-network true
+
+# Configure firewall
+az sql server firewall-rule create `
+  --name AllowAzureServices `
+  --server sqlaivector-{id} `
+  --resource-group azureaiworkshoprg `
+  --start-ip-address 0.0.0.0 `
+  --end-ip-address 0.0.0.0
+
+# Create database
+az sql db create `
+  --name vectordb `
+  --server sqlaivector-{id} `
+  --resource-group azureaiworkshoprg `
+  --edition GeneralPurpose `
+  --family Gen5 `
+  --capacity 2 `
+  --max-size 32GB `
+  --backup-storage-redundancy Geo
+```
+
+---
+
+## ⚠️ Important Notes
+
+### Password Security
+- Password is auto-generated with 16+ characters
+- Password includes uppercase, lowercase, numbers, and special characters
+- Password is stored in .env file (keep secure!)
+- Treat .env as sensitive/confidential
+
+### Firewall Configuration
+- Script creates open firewall rule for **lab purposes**
+- **Production:** Remove open rule and add specific IPs only
+- Consider Private Endpoints for production workloads
+
+### Cost Awareness
+- GP_Gen5 2 vCore = ~$729/month
+- Consider lower tiers for labs (Basic ~$5, S0 ~$15)
+- Delete resources when not in use
+
+### Database Size
+- Max size: 32 GB
+- Good for lab exercises
+- Can be increased if needed
+
+---
+
+## 🎉 Completion Status
+
+**✅ FULLY COMPLETE**
+
+All requested modifications have been successfully implemented:
+- ✅ SQL Server creation function added
+- ✅ Database creation implemented
+- ✅ Matches SQLDB.json specifications
+- ✅ Secure password generation
+- ✅ Firewall rules configured
+- ✅ FQDN and credentials collection
+- ✅ .env file update integrated
+- ✅ Documentation updated
+- ✅ Validation guide created
+
+**The script is ready for deployment!**
+
+---
+
+**Last Updated:** February 22, 2026  
+**Modified By:** GitHub Copilot  
+**Task:** Add SQL Server and Database support to Deploy-AzureAIFoundry.ps1

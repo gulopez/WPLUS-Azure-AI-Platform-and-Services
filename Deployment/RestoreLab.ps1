@@ -516,9 +516,10 @@ function Main {
         $foundryInfo = Get-AIFoundryInfo -FoundryName $FoundryName -ResourceGroupName $ResourceGroupName
 
         if ($foundryInfo) {
-            $envVars["AZURE_OPENAI_ENDPOINT"]  = $foundryInfo.Endpoint
-            $envVars["AZURE_OPENAI_API_KEY"]   = $foundryInfo.PrimaryKey
-          
+            $envVars["AZURE_OPENAI_ENDPOINT"]        = $foundryInfo.Endpoint
+            $envVars["AZURE_OPENAI_API_KEY"]         = $foundryInfo.PrimaryKey
+            $envVars["TENANT_ID"]                    = $accountInfo.tenantId
+            $envVars["AI_FOUNDRY_PROJECT_ENDPOINT"]  = "$($foundryInfo.Endpoint)/api/projects/$ProjectName"
         }
 
         # Model deployments

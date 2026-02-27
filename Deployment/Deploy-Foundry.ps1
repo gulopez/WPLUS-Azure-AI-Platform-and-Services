@@ -48,8 +48,8 @@ param(
     [string]$ProjectName = "firstProject",
 
     # Model deployment options (merged from Deploy-Models.ps1)
-    [Parameter(Mandatory=$false, HelpMessage="Deploy default or provided model deployments")]
-    [switch]$DeployModels = $true,
+    [Parameter(Mandatory=$true)]
+    [switch]$DeployModels,
 
     [Parameter(Mandatory=$false, HelpMessage="Array of model definitions to deploy")]
     [array]$Models

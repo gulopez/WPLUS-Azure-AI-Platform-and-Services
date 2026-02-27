@@ -1,0 +1,27 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "accounts_ai_foundry_59483770_name": {
+            "defaultValue": "ai-foundry-59483770",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.CognitiveServices/accounts/projects",
+            "apiVersion": "2025-06-01",
+            "name": "[concat(parameters('accounts_ai_foundry_59483770_name'), '/firstProject')]",
+            "location": "eastus2",
+            "kind": "AIServices",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "description": "Default project created with the resource",
+                "displayName": "firstProject"
+            }
+        }
+    ]
+}

@@ -2,8 +2,8 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "searchServices_aisearch_59358560_name": {
-            "defaultValue": "aisearch-59358560",
+        "searchServices_aisearch_59483770_name": {
+            "defaultValue": "aisearch-59483770",
             "type": "String"
         }
     },
@@ -12,7 +12,7 @@
         {
             "type": "Microsoft.Search/searchServices",
             "apiVersion": "2025-05-01",
-            "name": "[parameters('searchServices_aisearch_59358560_name')]",
+            "name": "[parameters('searchServices_aisearch_59483770_name')]",
             "location": "East US 2",
             "sku": {
                 "name": "basic"
@@ -20,7 +20,7 @@
             "properties": {
                 "replicaCount": 1,
                 "partitionCount": 1,
-                "endpoint": "[concat('https://', parameters('searchServices_aisearch_59358560_name'), '.search.windows.net')]",
+                "endpoint": "[concat('https://', parameters('searchServices_aisearch_59483770_name'), '.search.windows.net')]",
                 "hostingMode": "Default",
                 "computeType": "Default",
                 "publicNetworkAccess": "Enabled",

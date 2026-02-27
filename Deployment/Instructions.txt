@@ -1,0 +1,53 @@
+
+#Deploy AI Foundry
+# Specify all parameters including location and project name
+.\Deploy-Foundry.ps1 `
+    -ResourceGroupName "WPLUS-Foundry" `
+    -FoundryName "ai-foundry-12345" `
+    -Location "eastus2" `
+    -ProjectName "proj-default"
+
+#Listing existing Foundry resources
+az cognitiveservices account list --resource-group "WPLUS-Foundry" --query "[?kind=='AIServices' || kind=='OpenAI'].name" -o tsv
+
+# Deploy default models
+.\Deploy-Models.ps1 -ResourceGroupName "WPLUS-Foundry" -FoundryName "myopenAI-wplus"
+
+# Deploy with custom model definitions
+$customModels = @(
+    @{ 
+        Name = "GPT-4o"
+        DeploymentName = "gpt-4o-custom"
+        ModelName = "gpt-4o"
+        Version = "2024-11-20"
+        Capacity = 100
+    }
+)
+.\Deploy-Models.ps1 -ResourceGroupName "WPLUS-Foundry" -FoundryName "myopenAI-wplus" -Models $customModels
+
+# Interactive prompts if parameters not provided
+.\Deploy-Models.ps1
+
+# Basic usage - displays all deployed models
+.\Get-ModelsInfo.ps1 -ResourceGroupName "WPLUS-Foundry" -FoundryName "myopenAI-wplus"
+
+# Export to JSON file
+.\Get-ModelsInfo.ps1 -ResourceGroupName "WPLUS-Foundry" -FoundryName "myopenAI-wplus" -ExportToFile "models-info.json"
+
+# Show raw JSON output
+.\Get-ModelsInfo.ps1 -ResourceGroupName "WPLUS-Foundry" -FoundryName "myopenAI-wplus" -ShowJson
+
+# Check models in different hub
+.\Get-ModelsInfo.ps1 -ResourceGroupName "WPLUS-Foundry" -FoundryName "hub-marketing"
+
+#Get foundry info
+.\Get-FoundryInfo.ps1 -ResourceGroupName "WPLUS-Foundry" -FoundryName "myopenAI-wplus" -ProjectName "proj-default"
+
+
+
+#Deploy Cosmos DB:
+.\Deploy-CosmosDB.ps1 -ResourceGroupName "WPLUS-Foundry" -CosmosAccountName "cosmosaivector-12345"
+
+# Basic usage
+.\Get-CosmosDBInfo.ps1 -ResourceGroupName "WPLUS-Foundry" -CosmosAccountName "cosmosaivector-12345"
+

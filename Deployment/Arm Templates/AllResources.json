@@ -1,0 +1,1165 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vulnerabilityAssessments_Default_storageContainerPath": {
+            "type": "SecureString"
+        },
+        "servers_sqlaivector_59547969_name": {
+            "defaultValue": "sqlaivector-59547969",
+            "type": "String"
+        },
+        "searchServices_aisearch_59547969_name": {
+            "defaultValue": "aisearch-59547969",
+            "type": "String"
+        },
+        "accounts_myopai_59547969_name": {
+            "defaultValue": "myopai-59547969",
+            "type": "String"
+        },
+        "databaseAccounts_cosmosaivector_59547969_name": {
+            "defaultValue": "cosmosaivector-59547969",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.CognitiveServices/accounts",
+            "apiVersion": "2025-06-01",
+            "name": "[parameters('accounts_myopai_59547969_name')]",
+            "location": "West US",
+            "sku": {
+                "name": "S0"
+            },
+            "kind": "OpenAI",
+            "properties": {
+                "apiProperties": {},
+                "customSubDomainName": "[parameters('accounts_myopai_59547969_name')]",
+                "networkAcls": {
+                    "defaultAction": "Allow",
+                    "virtualNetworkRules": [],
+                    "ipRules": []
+                },
+                "allowProjectManagement": false,
+                "publicNetworkAccess": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[parameters('databaseAccounts_cosmosaivector_59547969_name')]",
+            "location": "East US 2",
+            "kind": "GlobalDocumentDB",
+            "identity": {
+                "type": "None"
+            },
+            "properties": {
+                "publicNetworkAccess": "Enabled",
+                "enableAutomaticFailover": true,
+                "enableMultipleWriteLocations": false,
+                "isVirtualNetworkFilterEnabled": false,
+                "virtualNetworkRules": [],
+                "disableKeyBasedMetadataWriteAccess": false,
+                "enableFreeTier": false,
+                "enableAnalyticalStorage": false,
+                "analyticalStorageConfiguration": {
+                    "schemaType": "WellDefined"
+                },
+                "databaseAccountOfferType": "Standard",
+                "enableMaterializedViews": false,
+                "capacityMode": "Provisioned",
+                "defaultIdentity": "FirstPartyIdentity",
+                "networkAclBypass": "None",
+                "disableLocalAuth": false,
+                "enablePartitionMerge": false,
+                "enablePerRegionPerPartitionAutoscale": true,
+                "enableBurstCapacity": false,
+                "enablePriorityBasedExecution": false,
+                "defaultPriorityLevel": "High",
+                "minimalTlsVersion": "Tls12",
+                "consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session",
+                    "maxIntervalInSeconds": 5,
+                    "maxStalenessPrefix": 100
+                },
+                "locations": [
+                    {
+                        "locationName": "East US 2",
+                        "failoverPriority": 0,
+                        "isZoneRedundant": false
+                    }
+                ],
+                "cors": [],
+                "capabilities": [
+                    {
+                        "name": "EnableNoSQLVectorSearch"
+                    }
+                ],
+                "ipRules": [],
+                "backupPolicy": {
+                    "type": "Periodic",
+                    "periodicModeProperties": {
+                        "backupIntervalInMinutes": 240,
+                        "backupRetentionIntervalInHours": 8,
+                        "backupStorageRedundancy": "Geo"
+                    }
+                },
+                "networkAclBypassResourceIds": [],
+                "diagnosticLogSettings": {
+                    "enableFullTextQuery": "None"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Search/searchServices",
+            "apiVersion": "2025-05-01",
+            "name": "[parameters('searchServices_aisearch_59547969_name')]",
+            "location": "East US 2",
+            "sku": {
+                "name": "basic"
+            },
+            "properties": {
+                "replicaCount": 1,
+                "partitionCount": 1,
+                "endpoint": "[concat('https://', parameters('searchServices_aisearch_59547969_name'), '.search.windows.net')]",
+                "hostingMode": "Default",
+                "computeType": "Default",
+                "publicNetworkAccess": "Enabled",
+                "networkRuleSet": {
+                    "ipRules": [],
+                    "bypass": "None"
+                },
+                "encryptionWithCmk": {
+                    "enforcement": "Unspecified"
+                },
+                "disableLocalAuth": false,
+                "authOptions": {
+                    "apiKeyOnly": {}
+                },
+                "dataExfiltrationProtections": [],
+                "semanticSearch": "free",
+                "upgradeAvailable": "notAvailable"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[parameters('servers_sqlaivector_59547969_name')]",
+            "location": "eastus2",
+            "kind": "v12.0",
+            "properties": {
+                "administratorLogin": "sqladmin",
+                "version": "12.0",
+                "minimalTlsVersion": "1.2",
+                "publicNetworkAccess": "Enabled",
+                "restrictOutboundNetworkAccess": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts/defenderForAISettings",
+            "apiVersion": "2025-06-01",
+            "name": "[concat(parameters('accounts_myopai_59547969_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('accounts_myopai_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts/raiPolicies",
+            "apiVersion": "2025-06-01",
+            "name": "[concat(parameters('accounts_myopai_59547969_name'), '/Microsoft.Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('accounts_myopai_59547969_name'))]"
+            ],
+            "properties": {
+                "mode": "Blocking",
+                "contentFilters": [
+                    {
+                        "name": "Hate",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Hate",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Sexual",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Sexual",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Violence",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Violence",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Selfharm",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Selfharm",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts/raiPolicies",
+            "apiVersion": "2025-06-01",
+            "name": "[concat(parameters('accounts_myopai_59547969_name'), '/Microsoft.DefaultV2')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('accounts_myopai_59547969_name'))]"
+            ],
+            "properties": {
+                "mode": "Blocking",
+                "contentFilters": [
+                    {
+                        "name": "Hate",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Hate",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Sexual",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Sexual",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Violence",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Violence",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Selfharm",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Selfharm",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Jailbreak",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Protected Material Text",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Protected Material Code",
+                        "blocking": false,
+                        "enabled": true,
+                        "source": "Completion"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/cassandraRoleDefinitions",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[concat(parameters('databaseAccounts_cosmosaivector_59547969_name'), '/00000000-0000-0000-0000-000000000003')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "roleName": "Cosmos DB Cassandra Built-in Data Reader",
+                "type": "BuiltInRole",
+                "assignableScopes": [
+                    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+                ],
+                "permissions": [
+                    {
+                        "dataActions": [
+                            "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+                            "Microsoft.DocumentDB/databaseAccounts/throughputSettings/read",
+                            "Microsoft.DocumentDB/databaseAccounts/cassandra/containers/executeQuery",
+                            "Microsoft.DocumentDB/databaseAccounts/cassandra/containers/readChangeFeed",
+                            "Microsoft.DocumentDB/databaseAccounts/cassandra/containers/entities/read"
+                        ],
+                        "notDataActions": []
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/cassandraRoleDefinitions",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[concat(parameters('databaseAccounts_cosmosaivector_59547969_name'), '/00000000-0000-0000-0000-000000000004')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "roleName": "Cosmos DB Cassandra Built-in Data Contributor",
+                "type": "BuiltInRole",
+                "assignableScopes": [
+                    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+                ],
+                "permissions": [
+                    {
+                        "dataActions": [
+                            "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+                            "Microsoft.DocumentDB/databaseAccounts/throughputSettings/read",
+                            "Microsoft.DocumentDB/databaseAccounts/throughputSettings/write",
+                            "Microsoft.DocumentDB/databaseAccounts/cassandra/*",
+                            "Microsoft.DocumentDB/databaseAccounts/cassandra/write",
+                            "Microsoft.DocumentDB/databaseAccounts/cassandra/delete",
+                            "Microsoft.DocumentDB/databaseAccounts/cassandra/containers/*",
+                            "Microsoft.DocumentDB/databaseAccounts/cassandra/containers/entities/*"
+                        ],
+                        "notDataActions": []
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/gremlinRoleDefinitions",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[concat(parameters('databaseAccounts_cosmosaivector_59547969_name'), '/00000000-0000-0000-0000-000000000003')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "roleName": "Cosmos DB Gremlin Built-in Data Reader",
+                "type": "BuiltInRole",
+                "assignableScopes": [
+                    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+                ],
+                "permissions": [
+                    {
+                        "dataActions": [
+                            "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+                            "Microsoft.DocumentDB/databaseAccounts/throughputSettings/read",
+                            "Microsoft.DocumentDB/databaseAccounts/gremlin/containers/executeQuery",
+                            "Microsoft.DocumentDB/databaseAccounts/gremlin/containers/readChangeFeed",
+                            "Microsoft.DocumentDB/databaseAccounts/gremlin/containers/entities/read"
+                        ],
+                        "notDataActions": []
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/gremlinRoleDefinitions",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[concat(parameters('databaseAccounts_cosmosaivector_59547969_name'), '/00000000-0000-0000-0000-000000000004')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "roleName": "Cosmos DB Gremlin Built-in Data Contributor",
+                "type": "BuiltInRole",
+                "assignableScopes": [
+                    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+                ],
+                "permissions": [
+                    {
+                        "dataActions": [
+                            "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+                            "Microsoft.DocumentDB/databaseAccounts/throughputSettings/read",
+                            "Microsoft.DocumentDB/databaseAccounts/throughputSettings/write",
+                            "Microsoft.DocumentDB/databaseAccounts/gremlin/*",
+                            "Microsoft.DocumentDB/databaseAccounts/gremlin/write",
+                            "Microsoft.DocumentDB/databaseAccounts/gremlin/delete",
+                            "Microsoft.DocumentDB/databaseAccounts/gremlin/containers/*",
+                            "Microsoft.DocumentDB/databaseAccounts/gremlin/containers/entities/*"
+                        ],
+                        "notDataActions": []
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleDefinitions",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[concat(parameters('databaseAccounts_cosmosaivector_59547969_name'), '/00000000-0000-0000-0000-000000000003')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "roleName": "Cosmos DB Mongo Built-in Data Reader",
+                "type": "BuiltInRole",
+                "assignableScopes": [
+                    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+                ],
+                "permissions": [
+                    {
+                        "dataActions": [
+                            "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+                            "Microsoft.DocumentDB/databaseAccounts/throughputSettings/read",
+                            "Microsoft.DocumentDB/databaseAccounts/mongoMI/containers/executeQuery",
+                            "Microsoft.DocumentDB/databaseAccounts/mongoMI/containers/readChangeFeed",
+                            "Microsoft.DocumentDB/databaseAccounts/mongoMI/containers/entities/read"
+                        ],
+                        "notDataActions": []
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleDefinitions",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[concat(parameters('databaseAccounts_cosmosaivector_59547969_name'), '/00000000-0000-0000-0000-000000000004')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "roleName": "Cosmos DB Mongo Built-in Data Contributor",
+                "type": "BuiltInRole",
+                "assignableScopes": [
+                    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+                ],
+                "permissions": [
+                    {
+                        "dataActions": [
+                            "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+                            "Microsoft.DocumentDB/databaseAccounts/throughputSettings/read",
+                            "Microsoft.DocumentDB/databaseAccounts/throughputSettings/write",
+                            "Microsoft.DocumentDB/databaseAccounts/mongoMI/*",
+                            "Microsoft.DocumentDB/databaseAccounts/mongoMI/write",
+                            "Microsoft.DocumentDB/databaseAccounts/mongoMI/delete",
+                            "Microsoft.DocumentDB/databaseAccounts/mongoMI/containers/*",
+                            "Microsoft.DocumentDB/databaseAccounts/mongoMI/containers/entities/*"
+                        ],
+                        "notDataActions": []
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[concat(parameters('databaseAccounts_cosmosaivector_59547969_name'), '/00000000-0000-0000-0000-000000000001')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "roleName": "Cosmos DB Built-in Data Reader",
+                "type": "BuiltInRole",
+                "assignableScopes": [
+                    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+                ],
+                "permissions": [
+                    {
+                        "dataActions": [
+                            "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+                            "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/executeQuery",
+                            "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/readChangeFeed",
+                            "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/read"
+                        ],
+                        "notDataActions": []
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[concat(parameters('databaseAccounts_cosmosaivector_59547969_name'), '/00000000-0000-0000-0000-000000000002')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "roleName": "Cosmos DB Built-in Data Contributor",
+                "type": "BuiltInRole",
+                "assignableScopes": [
+                    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+                ],
+                "permissions": [
+                    {
+                        "dataActions": [
+                            "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+                            "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/*",
+                            "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/*"
+                        ],
+                        "notDataActions": []
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[concat(parameters('databaseAccounts_cosmosaivector_59547969_name'), '/00000000-0000-0000-0000-000000000001')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "roleName": "Cosmos DB Built-in Data Reader",
+                "type": "BuiltInRole",
+                "assignableScopes": [
+                    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+                ],
+                "permissions": [
+                    {
+                        "dataActions": [
+                            "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+                            "Microsoft.DocumentDB/databaseAccounts/tables/containers/executeQuery",
+                            "Microsoft.DocumentDB/databaseAccounts/tables/containers/readChangeFeed",
+                            "Microsoft.DocumentDB/databaseAccounts/tables/containers/entities/read"
+                        ],
+                        "notDataActions": []
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions",
+            "apiVersion": "2025-05-01-preview",
+            "name": "[concat(parameters('databaseAccounts_cosmosaivector_59547969_name'), '/00000000-0000-0000-0000-000000000002')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "roleName": "Cosmos DB Built-in Data Contributor",
+                "type": "BuiltInRole",
+                "assignableScopes": [
+                    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_cosmosaivector_59547969_name'))]"
+                ],
+                "permissions": [
+                    {
+                        "dataActions": [
+                            "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+                            "Microsoft.DocumentDB/databaseAccounts/tables/*",
+                            "Microsoft.DocumentDB/databaseAccounts/tables/containers/*",
+                            "Microsoft.DocumentDB/databaseAccounts/tables/containers/entities/*"
+                        ],
+                        "notDataActions": []
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advancedThreatProtectionSettings",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/CreateIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/DbParameterization')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/DefragmentIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/DropIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/ForceLastGoodPlan')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/auditingPolicies",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/Default')]",
+            "location": "East US 2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "auditingState": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/auditingSettings",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "auditActionsAndGroups": [],
+                "isStorageSecondaryKeyInUse": false,
+                "isAzureMonitorTargetEnabled": false,
+                "isManagedIdentityInUse": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/connectionPolicies",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/default')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "connectionType": "Default"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "sku": {
+                "name": "GP_Gen5",
+                "tier": "GeneralPurpose",
+                "family": "Gen5",
+                "capacity": 2
+            },
+            "kind": "v12.0,user,vcore",
+            "properties": {
+                "collation": "SQL_Latin1_General_CP1_CI_AS",
+                "maxSizeBytes": 34359738368,
+                "catalogCollation": "SQL_Latin1_General_CP1_CI_AS",
+                "zoneRedundant": false,
+                "licenseType": "LicenseIncluded",
+                "readScale": "Disabled",
+                "requestedBackupStorageRedundancy": "Geo",
+                "maintenanceConfigurationId": "/subscriptions/bde7be2e-fee0-4845-bf26-eb6f64154f94/providers/Microsoft.Maintenance/publicMaintenanceConfigurations/SQL_Default",
+                "isLedgerOn": false,
+                "availabilityZone": "NoPreference"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advancedThreatProtectionSettings",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingPolicies",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/master/Default')]",
+            "location": "East US 2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "auditingState": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingSettings",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/extendedAuditingSettings",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/geoBackupPolicies",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/ledgerDigestUploads",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/master/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/securityAlertPolicies",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled",
+                "disabledAlerts": [
+                    ""
+                ],
+                "emailAddresses": [
+                    ""
+                ],
+                "emailAccountAdmins": false,
+                "retentionDays": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/transparentDataEncryption",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/master/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/vulnerabilityAssessments",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "recurringScans": {
+                    "isEnabled": false,
+                    "emailSubscriptionAdmins": true
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/devOpsAuditingSettings",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "isAzureMonitorTargetEnabled": false,
+                "isManagedIdentityInUse": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/encryptionProtector",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "kind": "servicemanaged",
+            "properties": {
+                "serverKeyName": "ServiceManaged",
+                "serverKeyType": "ServiceManaged",
+                "autoRotationEnabled": false
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/extendedAuditingSettings",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "auditActionsAndGroups": [],
+                "isStorageSecondaryKeyInUse": false,
+                "isAzureMonitorTargetEnabled": false,
+                "isManagedIdentityInUse": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/keys",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/ServiceManaged')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "kind": "servicemanaged",
+            "properties": {
+                "serverKeyType": "ServiceManaged"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/securityAlertPolicies",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled",
+                "disabledAlerts": [
+                    ""
+                ],
+                "emailAddresses": [
+                    ""
+                ],
+                "emailAccountAdmins": false,
+                "retentionDays": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/sqlVulnerabilityAssessments",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/vulnerabilityAssessments",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "recurringScans": {
+                    "isEnabled": false,
+                    "emailSubscriptionAdmins": true
+                },
+                "storageContainerPath": "[parameters('vulnerabilityAssessments_Default_storageContainerPath')]"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advancedThreatProtectionSettings",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/CreateIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/DbParameterization')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/DefragmentIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/DropIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/ForceLastGoodPlan')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingPolicies",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/Default')]",
+            "location": "East US 2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "auditingState": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingSettings",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/backupLongTermRetentionPolicies",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "weeklyRetention": "PT0S",
+                "monthlyRetention": "PT0S",
+                "yearlyRetention": "PT0S",
+                "weekOfYear": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/backupShortTermRetentionPolicies",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 7,
+                "diffBackupIntervalInHours": 12
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/extendedAuditingSettings",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/geoBackupPolicies",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/ledgerDigestUploads",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/securityAlertPolicies",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled",
+                "disabledAlerts": [
+                    ""
+                ],
+                "emailAddresses": [
+                    ""
+                ],
+                "emailAccountAdmins": false,
+                "retentionDays": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/transparentDataEncryption",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "state": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/vulnerabilityAssessments",
+            "apiVersion": "2024-05-01-preview",
+            "name": "[concat(parameters('servers_sqlaivector_59547969_name'), '/vectordb/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_sqlaivector_59547969_name'), 'vectordb')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_sqlaivector_59547969_name'))]"
+            ],
+            "properties": {
+                "recurringScans": {
+                    "isEnabled": false,
+                    "emailSubscriptionAdmins": true
+                }
+            }
+        }
+    ]
+}

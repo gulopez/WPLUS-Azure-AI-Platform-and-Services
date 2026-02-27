@@ -472,6 +472,7 @@ poetry.lock
 
 # Environments - IMPORTANT: This protects sensitive credentials
 .env
+.env copy.example
 .env.local
 .env.development.local
 .env.test.local
